@@ -49,3 +49,8 @@ Esta es una herramienta para asignar todos los "G-Buffer ID Override" de toda la
 La interfaz ordena los materiales según su G-Buffer ID Override. También tiene la opción de hacer click en el botón con el nombre de cada material para poder seleccionar todos los objetos de la escena que tengan el material.
 ![alt text](https://i.imgur.com/tR2RsIL.png)
 ![alt text](https://i.imgur.com/4i7AAdJ.png)
+
+-----
+- ### Extrude Vertex/Segment
+Un operador para Splines para poder hacer extrusiones de segmentos y vértices. Si el comando se usa con el primer o último vértice seleccionado, crea un vértice extra en la misma posición y lo deja seleccionado, listo para desplazarlo. Si el comando se usa con un segmento seleccionado, se crean dos vertices en los extremos del segmento (superpuestos a los originales), para que al mover el segmento seleccionado se haga la extrusión.
+![alt text](https://i.imgur.com/NFfe5Cm.gif)

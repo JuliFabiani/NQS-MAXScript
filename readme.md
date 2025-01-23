@@ -2,6 +2,9 @@
 
 En este repositorio voy subiendo los scripts hechos para NQS. Casi todos son 'macroscripts' que una vez registrados se pueden correr por dos formas: agregando un botón en la interfaz, o asignando un atajo.
 
+## Instalación
+
+Para instalar y mantener actualizados todos los scripts, se puede usar el archivo .ms que está en INSTALACION_AUTOMÁTICA. Este tiene todos los scripts actualizados y garantiza de que quede todo up-to-date. Igualmente se puede descargar cualquier macroscript (.mcr) e instalarlo de forma individual.
 ![alt text](https://i.imgur.com/8rAqvUF.jpeg)
 
 -----

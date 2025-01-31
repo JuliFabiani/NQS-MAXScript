@@ -27,6 +27,11 @@ Asigna un mismo color aleatorio a la selección completa.
 ![alt text](https://i.imgur.com/TASzl8H.png)
 
 -----
+- ### Asignar mismo HUE (Selección)
+Asigna el mismo tono al color de todos los objetos seleccionados, variando el brillo y la saturación de forma aleatoria.
+![alt text](https://i.imgur.com/UfLPRh3.gif)
+
+-----
 - ### Ceentrar Pivot (Selección)
 Ubica en la posición del pivot del primer objeto seleccionado los pivots del resto de la selección.
 
@@ -49,6 +54,11 @@ Esta es una herramienta para asignar todos los "G-Buffer ID Override" de toda la
 La interfaz ordena los materiales según su G-Buffer ID Override. También tiene la opción de hacer click en el botón con el nombre de cada material para poder seleccionar todos los objetos de la escena que tengan el material.
 ![alt text](https://i.imgur.com/tR2RsIL.png)
 ![alt text](https://i.imgur.com/4i7AAdJ.png)
+
+-----
+- ### Clean SG Edit Poly (Selección)
+Herramienta para limpiar todos los Smoothing Group de los EDIT POLY que estén en la selección. Esto aplica para los objetos base de tipo Editable Poly, como para los modificadores Edit Poly que pueda haber en algún stack. Aplica solo a Edit Poly, limpiar los SG de Edit Mesh vía MaxScript no es posible si hay un stack de modificadores encima, así que quedó fuera de alcance. Este script funciona solamente con Edit Poly (BaseObject y Modifiers).
+![alt text](https://i.imgur.com/r1q2PON.gif)
 
 -----
 - ### Extrude Vertex/Segment

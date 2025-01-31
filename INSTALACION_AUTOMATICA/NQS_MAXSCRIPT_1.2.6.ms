@@ -5,10 +5,16 @@ buttonText:"NQS"
 (
     rollout NQS_Rollout "NQS" (
 
-        group "NQS - General" (
+        group "NQS - Propiedades de objeto" (
             button btn1 "Renombrar por Capas (Selección)" tooltip:"Renombra y numera los objetos seleccionados como 'NombreDeCapa_001'"
             button btn2 "Asignar Colores Aleatorios (Selección)" tooltip:"Asigna a los objetos seleccionados distintos colores aleatorios."
             button btn3 "Asignar el Mismo Color Aleatorio (Selección)" tooltip:"Asigna a los objetos seleccionados un mismo color aleatorio."
+            button btn9 "Asignar el Mismo HUE (Selección)" tooltip:"Asigna a los objetos seleccionados el mismo HUE, pero distinta saturación/brillo."
+        )
+        group "NQS - Geometría" (
+            button btn10 "Extrude Vertex (Spline)" tooltip:"Duplica el segmento seleccionado/primer vértice/último vértice para hacer una extrusión."
+            button btn11 "Clean Edit Poly SG (Selección)" tooltip:" Limpia todos los Smoothing Groups de los Edit Poly que estén seleccionados, tanto en baseObjects como en modifiers."
+
         )
         group "NQS - RailClone" (
             button btn4 "Centrar Pivot (Selección)" tooltip:"Centra el Pivot al primer objeto que haya sido seleccionado."
@@ -31,6 +37,9 @@ buttonText:"NQS"
         on btn6 pressed do macros.run "#NQS" "NQS_GBufferIDChecker"
         on btn7 pressed do macros.run "#NQS" "NQS_QuickAttachSel"
         on btn8 pressed do macros.run "#NQS" "NQS_QuickAttachAll"
+        on btn9 pressed do macros.run "#NQS" "NQS_SameHUE"
+        on btn10 pressed do macros.run "#NQS" "NQS_ExtrudeVertexSegment"
+        on btn11 pressed do macros.run "#NQS" "NQS_CleanSG"
 
     )    
     CreateDialog NQS_Rollout width:300
@@ -88,6 +97,58 @@ tooltip:"[Selección] Asignar mismo color aleatorio"
     redrawViews()
 )
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+macroScript NQS_SameHUE
+category:"#NQS"
+buttonText:"SameHUE"
+tooltip:"[Selección] Asignar mismo HUE"
+(
+
+    fn HSVtoRGB hsv = (
+        local h = hsv[1]
+        local s = hsv[2]
+        local v = hsv[3]
+        
+        local c = v * s
+        local x = c * (1 - abs(mod (h / 60.0) 2 - 1))
+        local m = v - c
+        
+        local r = 0.0
+        local g = 0.0
+        local b = 0.0
+        
+        if h < 60 then (
+            r = c; g = x; b = 0
+        ) else if h < 120 then (
+            r = x; g = c; b = 0
+        ) else if h < 180 then (
+            r = 0; g = c; b = x
+        ) else if h < 240 then (
+            r = 0; g = x; b = c
+        ) else if h < 300 then (
+            r = x; g = 0; b = c
+        ) else (
+            r = c; g = 0; b = x
+        )
+        
+        r = (r + m) * 255
+        g = (g + m) * 255
+        b = (b + m) * 255
+        
+        return (color r g b)
+    )
+
+    undo on (
+        hue = random 0.0 360.0
+
+        for o in selection do try (
+
+            o.wirecolor = HSVtoRGB [hue, random 0.15 1.0, random 0.3 1.0]
+            o.colorByLayer = off
+        ) catch ()
+    )
+    redrawViews()
+)
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 macroScript NQS_CentrarPivot
 category:"#NQS"
 buttonText:"CentrarPivot"
@@ -118,8 +179,8 @@ tooltip:"[RailClone] Seleccionar Base-Line"
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 macroScript NQS_GBufferIDChecker
 category:"#NQS"
-tooltip:"[Rendering] Seleccionar objetos con G-Buffer Override"
 buttonText:"GBufferIDChecker"
+tooltip:"[Rendering] Seleccionar objetos con G-Buffer Override"
 (
     --#####  VARIABLES
     global NQS_OverrideIDCheckerRollout
@@ -150,9 +211,6 @@ buttonText:"GBufferIDChecker"
         
             subrollout srmat "srmat" height:(NQS_OverrideIDCheckerRollout.height-90)
         )
---      group "Object G-Buffer ID Override" (
---          subrollout srobj "srobj" height:(NQS_OverrideIDCheckerRollout.height-10)
---      )
 
         --###################################################
         fn compareOverrideID obj1 obj2 =
@@ -376,5 +434,94 @@ tooltip:"[QuickAttach] Colapsar escena completa a un objeto"
         mymax = b.max
         mymin = b.min
         b.pivot = [(mymax.x+mymin.x)/2, (mymax.y+mymin.y)/2, (mymax.z+mymin.z)/2]
+    )
+)
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+macroScript NQS_ExtrudeVertexSegment
+category:"#NQS"
+buttonText:"ExtrudeVertexSegment"
+tooltip:"[Spline] Extrude Vertex/Segment"
+(
+    undo on (
+
+        if(subObjectLevel == 2) do (
+            shape = selection[1]
+
+            for spline=1 to (numSplines shape) do (
+
+                selSegs = (getSegSelection shape spline)
+
+                for s = selSegs.count to 1 by -1 do (
+
+                    format "spline: %, seg: %\n" spline selSegs[s]
+
+                    refineSegment shape spline selSegs[s] 1
+                    refineSegment shape spline selSegs[s] 0
+                )
+                
+                newSel = for s=1 to selSegs.count collect (selSegs[s] + s*2-1)
+                setSegSelection shape spline newSel
+
+            )
+            updateshape shape
+        )
+        if(subObjectLevel == 1) do (
+            shape = selection[1]
+            for spline=1 to (numSplines shape) do (
+
+                _v = getKnotSelection shape spline
+                if not _v.count == 1 do exit
+                vert = _v[1]
+
+                if (vert == (numKnots shape spline)) do (
+                    addKnot shape spline #corner #line (getKnotPoint shape spline vert) (numKnots shape spline)
+                    updateshape shape
+                    setKnotSelection shape spline #(vert+1)
+                )
+                if (vert == 1) do (
+                    addKnot shape spline #corner #line (getKnotPoint shape spline vert) 1
+                    updateshape shape
+                    setKnotSelection shape spline #(1)
+                )
+
+            )
+
+        )
+
+    )
+)
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+macroScript NQS_CleanSG
+category:"#NQS"
+buttonText:"CleanSG"
+tooltip:"[Edit Poly] Clean Smoothing Groups"
+(
+    undo on (
+
+        for o in selection do (
+
+            if (classof o.baseObject == Editable_Poly) do (
+                format "OBJETO '%' (%) >>> cleaning sg\n" o.name (classof o.baseObject)
+                numFaces = polyop.getNumfaces o.baseObject
+                polyop.setFaceSmoothGroup o.baseObject #{1..numFaces} 0
+            )
+
+            for m in o.modifiers do (
+                if (classof m == Edit_Poly) do (
+
+                    format "OBJETO '%' (%) / MODIFICADOR '%' (%) >>> cleaning sg\n" o.name (classof o.baseObject) m.name (classof m)
+
+                        m.SetSelection #Face #{1..(editPolyMod.GetNumFaces m)}
+                        
+                        m.SetOperation #SetSmooth
+                        m.smoothingGroupsToSet = 0
+                        m.smoothingGroupsToClear = -1
+                )
+            )
+        )
+
     )
 )
